@@ -24,8 +24,8 @@ public class Main {
         System.out.println("Annual Salary: " + annualSalary);
 
         // Create employee objects using the constructor
-        Employee emp1 = new Employee(101, "Rahul", "IT", 35000);
-        Employee emp2 = new Employee(102, "Priya", "HR", 42000);
+        Employee emp1 = new Employee(101, "Rahul", "Rajpoot", "IT","Software_Intern" ,35000);
+        Employee emp2 = new Employee(102, "Priya", "Rajpoot", "HR", "HR_Intern", 42000);
 
         // Display employee details through object methods
         System.out.println("\n--- First Employee ---");
