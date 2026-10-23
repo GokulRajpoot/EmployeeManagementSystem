@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import com.ems.model.Employee;
+
 public class Main {
 
     private static final ArrayList<Employee> employees =

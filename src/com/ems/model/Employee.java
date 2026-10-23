@@ -1,5 +1,5 @@
 
-package com.ems;
+package com.ems.model;
 
 import java.time.LocalDate;
 
