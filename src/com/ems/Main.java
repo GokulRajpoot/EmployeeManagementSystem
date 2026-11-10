@@ -2,24 +2,29 @@
 package com.ems;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
+import com.ems.exception.DuplicateEmployeeException;
+import com.ems.exception.EmployeeNotFoundException;
 import com.ems.model.Employee;
+import com.ems.service.EmployeeService;
+import com.ems.util.InputUtil;
 
 public class Main {
 
-    private static final ArrayList<Employee> employees =
-            new ArrayList<>();
-
     private static final Scanner scanner = new Scanner(System.in);
+
+    private static final InputUtil input =
+            new InputUtil(scanner);
+
+    private static final EmployeeService employeeService =
+            new EmployeeService();
 
     public static void main(String[] args) {
 
-        int choice = 0;
+        int choice;
 
         do {
             System.out.println("\n===== EMPLOYEE MANAGEMENT SYSTEM =====");
@@ -32,49 +37,47 @@ public class Main {
             System.out.println("7. Search Employees By Department");
             System.out.println("8. Display Employee Count");
             System.out.println("9. Exit");
-            System.out.print("Enter your choice: ");
 
-            if (!scanner.hasNextInt()) {
-                System.out.println(
-                        "Invalid input. Please enter a number.");
-                scanner.nextLine();
-                continue;
-            }
+            choice = input.readInt("Enter your choice: ");
 
-            choice = scanner.nextInt();
-            scanner.nextLine();
+            try {
+                switch (choice) {
+                    case 1:
+                        addEmployee();
+                        break;
+                    case 2:
+                        viewAllEmployees();
+                        break;
+                    case 3:
+                        findEmployeeById();
+                        break;
+                    case 4:
+                        updateEmployee();
+                        break;
+                    case 5:
+                        deleteEmployee();
+                        break;
+                    case 6:
+                        sortEmployeesBySalary();
+                        break;
+                    case 7:
+                        searchEmployeesByDepartment();
+                        break;
+                    case 8:
+                        displayEmployeeCount();
+                        break;
+                    case 9:
+                        System.out.println("Thank you for using EMS!");
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Choose 1-9.");
+                }
 
-            switch (choice) {
-                case 1:
-                    addEmployee();
-                    break;
-                case 2:
-                    viewAllEmployees();
-                    break;
-                case 3:
-                    findEmployeeById();
-                    break;
-                case 4:
-                    updateEmployee();
-                    break;
-                case 5:
-                    deleteEmployee();
-                    break;
-                case 6:
-                    sortEmployeesBySalary();
-                    break;
-                case 7:
-                    searchEmployeesByDepartment();
-                    break;
-                case 8:
-                    displayEmployeeCount();
-                    break;
-                case 9:
-                    System.out.println("Exiting application. Goodbye!");
-                    break;
-                default:
-                    System.out.println(
-                            "Invalid choice. Please choose 1-9.");
+            } catch (DuplicateEmployeeException
+                    | EmployeeNotFoundException
+                    | IllegalArgumentException e) {
+
+                System.out.println("Error: " + e.getMessage());
             }
 
         } while (choice != 9);
@@ -82,116 +85,75 @@ public class Main {
         scanner.close();
     }
 
+    // Add Employee
     private static void addEmployee() {
 
         System.out.println("\n--- Add Employee ---");
 
-        System.out.print("Enter employee ID: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = input.readInt("Enter employee ID: ");
 
-        if (findEmployee(id) != null) {
-            System.out.println(
-                    "An employee with this ID already exists.");
-            return;
-        }
+        String firstName = input.readString("Enter first name: ");
+        String lastName = input.readString("Enter last name: ");
+        String department = input.readString("Enter department: ");
+        String designation = input.readString("Enter designation: ");
 
-        System.out.print("Enter first name: ");
-        String firstName = scanner.nextLine();
+        LocalDate hireDate = readHireDate();
 
-        System.out.print("Enter last name: ");
-        String lastName = scanner.nextLine();
-
-        System.out.print("Enter department: ");
-        String department = scanner.nextLine();
-
-        System.out.print("Enter designation: ");
-        String designation = scanner.nextLine();
-
-        System.out.print("Enter hire date (YYYY-MM-DD): ");
-        LocalDate hireDate = LocalDate.parse(scanner.nextLine());
-
-        System.out.print("Enter salary: ");
-        double salary = scanner.nextDouble();
-        scanner.nextLine();
+        double salary = input.readDouble("Enter salary: ");
 
         Employee employee = new Employee(
-                id,
-                firstName,
-                lastName,
-                department,
-                designation,
-                hireDate,
-                salary
-        );
+                id, firstName, lastName,
+                department, designation, hireDate, salary);
 
-        employees.add(employee);
+        employeeService.addEmployee(employee);
 
         System.out.println("Employee added successfully.");
     }
 
+    // View All Employees
     private static void viewAllEmployees() {
 
         System.out.println("\n--- All Employees ---");
 
-        if (employees.isEmpty()) {
-            System.out.println("No employees found.");
-            return;
-        }
+        List<Employee> employees =
+                employeeService.getAllEmployees();
 
         displayEmployees(employees);
     }
 
+    // Find Employee By ID
     private static void findEmployeeById() {
 
         System.out.println("\n--- Find Employee ---");
 
-        System.out.print("Enter employee ID: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = input.readInt("Enter employee ID: ");
 
-        Employee employee = findEmployee(id);
+        Employee employee =
+                employeeService.getEmployeeById(id);
 
-        if (employee != null) {
-            employee.displayDetails();
-        } else {
-            System.out.println("Employee not found.");
-        }
+        employee.displayDetails();
     }
 
+    // Update Employee
     private static void updateEmployee() {
 
         System.out.println("\n--- Update Employee ---");
 
-        System.out.print("Enter employee ID to update: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = input.readInt("Enter employee ID to update: ");
 
-        Employee employee = findEmployee(id);
+        Employee employee =
+                employeeService.getEmployeeById(id);
 
-        if (employee == null) {
-            System.out.println("Employee not found.");
-            return;
-        }
+        System.out.println("Enter new employee details:");
 
-        System.out.print("Enter new first name: ");
-        String firstName = scanner.nextLine();
+        String firstName = input.readString("Enter first name: ");
+        String lastName = input.readString("Enter last name: ");
+        String department = input.readString("Enter department: ");
+        String designation = input.readString("Enter designation: ");
 
-        System.out.print("Enter new last name: ");
-        String lastName = scanner.nextLine();
+        LocalDate hireDate = readHireDate();
 
-        System.out.print("Enter new department: ");
-        String department = scanner.nextLine();
-
-        System.out.print("Enter new designation: ");
-        String designation = scanner.nextLine();
-
-        System.out.print("Enter new hire date (YYYY-MM-DD): ");
-        LocalDate hireDate = LocalDate.parse(scanner.nextLine());
-
-        System.out.print("Enter new salary: ");
-        double salary = scanner.nextDouble();
-        scanner.nextLine();
+        double salary = input.readDouble("Enter salary: ");
 
         employee.setFirstName(firstName);
         employee.setLastName(lastName);
@@ -200,87 +162,86 @@ public class Main {
         employee.setHireDate(hireDate);
         employee.setSalary(salary);
 
-        System.out.println("Employee update operation completed.");
+        employeeService.updateEmployee(employee);
+
+        System.out.println("Employee updated successfully.");
     }
 
+    // Delete Employee
     private static void deleteEmployee() {
 
         System.out.println("\n--- Delete Employee ---");
 
-        System.out.print("Enter employee ID to delete: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = input.readInt("Enter employee ID to delete: ");
 
-        Employee employee = findEmployee(id);
+        employeeService.deleteEmployee(id);
 
-        if (employee != null) {
-            employees.remove(employee);
-            System.out.println("Employee deleted successfully.");
-        } else {
-            System.out.println("Employee not found.");
-        }
+        System.out.println("Employee deleted successfully.");
     }
 
+    // Sort Employees By Salary
     private static void sortEmployeesBySalary() {
 
         System.out.println("\n--- Employees Sorted By Salary ---");
 
-        if (employees.isEmpty()) {
-            System.out.println("No employees to sort.");
-            return;
-        }
+        List<Employee> employees =
+                employeeService.getEmployeesSortedBySalary();
 
-        List<Employee> sortedEmployees = employees.stream()
-                .sorted(Comparator.comparingDouble(Employee::getSalary))
-                .collect(Collectors.toList());
-
-        displayEmployees(sortedEmployees);
+        displayEmployees(employees);
     }
 
+    // Search By Department
     private static void searchEmployeesByDepartment() {
 
         System.out.println("\n--- Search By Department ---");
 
-        System.out.print("Enter department: ");
-        String department = scanner.nextLine();
+        String department =
+                input.readString("Enter department: ");
 
-        List<Employee> matchingEmployees = employees.stream()
-                .filter(employee -> employee.getDepartment()
-                        .equalsIgnoreCase(department.trim()))
-                .collect(Collectors.toList());
+        List<Employee> employees =
+                employeeService.searchByDepartment(department);
 
-        if (matchingEmployees.isEmpty()) {
-            System.out.println(
-                    "No employees found in that department.");
-        } else {
-            displayEmployees(matchingEmployees);
-        }
+        displayEmployees(employees);
     }
 
+    // Display Employee Count
     private static void displayEmployeeCount() {
 
         System.out.println(
-                "Total employees: " + employees.size());
+                "Total employees: "
+                        + employeeService.getEmployeeCount());
     }
 
-    private static Employee findEmployee(int id) {
+    // Display Employee List
+    private static void displayEmployees(List<Employee> employees) {
 
-        for (Employee employee : employees) {
-            if (employee.getEmployeeId() == id) {
-                return employee;
-            }
+        if (employees.isEmpty()) {
+            System.out.println("No employees found.");
+            return;
         }
 
-        return null;
-    }
-
-    private static void displayEmployees(List<Employee> employeeList) {
-
-        for (Employee employee : employeeList) {
+        for (Employee employee : employees) {
             System.out.println("----------------------------");
             employee.displayDetails();
         }
 
         System.out.println("----------------------------");
+    }
+
+    // Read and Validate Hire Date
+    private static LocalDate readHireDate() {
+
+        while (true) {
+
+            String date = input.readString(
+                    "Enter hire date (YYYY-MM-DD): ");
+
+            try {
+                return LocalDate.parse(date);
+            } catch (DateTimeParseException e) {
+                System.out.println(
+                        "Invalid date. Example: 2025-06-15");
+            }
+        }
     }
 }

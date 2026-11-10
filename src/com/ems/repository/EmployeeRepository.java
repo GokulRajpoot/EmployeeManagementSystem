@@ -1,61 +1,23 @@
 
 package com.ems.repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.ems.model.Employee;
 
-public class EmployeeRepository {
+public interface EmployeeRepository {
 
-    private final List<Employee> employees = new ArrayList<>();
+    void add(Employee employee);
 
-    public void add(Employee employee) {
-        employees.add(employee);
-    }
+    List<Employee> findAll();
 
-    public List<Employee> findAll() {
-        return new ArrayList<>(employees);
-    }
+    Employee findById(int employeeId);
 
-    public Employee findById(int employeeId) {
-        for (Employee employee : employees) {
-            if (employee.getEmployeeId() == employeeId) {
-                return employee;
-            }
-        }
+    boolean existsById(int employeeId);
 
-        return null;
-    }
+    boolean update(Employee employee);
 
-    public boolean existsById(int employeeId) {
-        return findById(employeeId) != null;
-    }
+    boolean deleteById(int employeeId);
 
-    public boolean update(Employee updatedEmployee) {
-        for (int i = 0; i < employees.size(); i++) {
-            if (employees.get(i).getEmployeeId()
-                    == updatedEmployee.getEmployeeId()) {
-                employees.set(i, updatedEmployee);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean deleteById(int employeeId) {
-        Employee employee = findById(employeeId);
-
-        if (employee != null) {
-            employees.remove(employee);
-            return true;
-        }
-
-        return false;
-    }
-
-    public int count() {
-        return employees.size();
-    }
+    int count();
 }

@@ -9,13 +9,14 @@ import com.ems.exception.DuplicateEmployeeException;
 import com.ems.exception.EmployeeNotFoundException;
 import com.ems.model.Employee;
 import com.ems.repository.EmployeeRepository;
+import com.ems.repository.InMemoryEmployeeRepository;
 
 public class EmployeeService {
 
     private final EmployeeRepository repository;
 
     public EmployeeService() {
-        this.repository = new EmployeeRepository();
+        this.repository = new InMemoryEmployeeRepository();
     }
 
     // Add Employee
